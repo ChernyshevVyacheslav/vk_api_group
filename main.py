@@ -2,15 +2,46 @@ import vk_api
 
 import os
 
+import json
+
 from dotenv import load_dotenv
+
+def check_post(data):
+    json_data = {}
+    new_posts=[]
+    with open('posts.json', 'r') as j:
+        json_data = json.load(j)
+    if isinstance(json_data, str):
+        json_data = dict(eval(json_data))
+    for i in data:
+        if str(i["id"]) not in json_data:
+            new_posts.append(i)
+            save_to_json(i)
+    j.close()
+    return new_posts
+
+
 
 def post_of_group(url, c, vk):
     group_data=vk.wall.get(domain=url, count=c)
-    return group_data
+    return group_data["items"]
+
+def save_to_json(data):
+    json_data = {}
+    with open('posts.json', 'r') as j:
+        json_data = json.load(j)
+    if isinstance(json_data, str):
+        json_data = dict(eval(json_data))
+    json_data[data["id"]]=data
+    with open('posts.json', 'w+') as file:
+        json.dump(json_data, file)
+    file.close()
+    j.close()
 
 load_dotenv()
 Token = os.getenv("TOKEN")
 token = vk_api.VkApi(token = Token)
 vk = token.get_api()
-group_data=post_of_group(someUrl, count, vk)
-print(group_data)
+Domain="yourgroup"
+group_data=post_of_group(Domain, 2, vk)
+new_posts=check_post(group_data)
