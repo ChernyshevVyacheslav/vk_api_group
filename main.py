@@ -6,6 +6,22 @@ import json
 
 from dotenv import load_dotenv
 
+import requests
+
+from apscheduler.schedulers.background import BlockingScheduler
+
+def send_to_group(posts):
+    for post in posts:
+
+        text=post["text"]
+        data = {
+            'message': text,
+        'parse_mode': 'HTML'
+            }
+
+        requests.post('https://notify.bot.codex.so/u/TOKEN', data=data)
+
+
 def check_post(data):
     json_data = {}
     new_posts=[]
@@ -37,11 +53,21 @@ def save_to_json(data):
         json.dump(json_data, file)
     file.close()
     j.close()
+def main():
+    load_dotenv()
+    Token = os.getenv("TOKEN")
+    token = vk_api.VkApi(token = Token)
+    vk = token.get_api()
+    Domain="yourgroup"
+    group_data=post_of_group(Domain, 2, vk)
+    new_posts=check_post(group_data)
+    send_to_group(new_posts)
 
-load_dotenv()
-Token = os.getenv("TOKEN")
-token = vk_api.VkApi(token = Token)
-vk = token.get_api()
-Domain="yourgroup"
-group_data=post_of_group(Domain, 2, vk)
-new_posts=check_post(group_data)
+if __name__ == '__main__':
+    scheduler = BlockingScheduler()
+    scheduler.add_job(main, 'interval', seconds=3)
+    try:
+        scheduler.start()
+    except KeyboardInterrupt:
+        pass
+scheduler.shutdown()
